@@ -24,4 +24,10 @@ class CalendarDay(Base):
     day: Mapped[int] = mapped_column(Integer, nullable=False)
     full_date: Mapped[date] = mapped_column(Date, nullable=False)
     weekday: Mapped[int] = mapped_column(Integer, nullable=False)
-    in_month: Mapped[bool] = mapped_column(Boolean, default=True)
+    in_month: Mapped[bool | None] = mapped_column(Boolean, default=True, nullable=True)
+
+class SingleDate(Base):
+    __tablename__ = "single_dates"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    full_date: Mapped[date] = mapped_column(Date, nullable=True)

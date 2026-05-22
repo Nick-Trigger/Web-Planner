@@ -27,4 +27,4 @@ class CalendarDayRead(BaseModel):
     day: int  # 1, 2, 3, ... 28/29/30/31
     weekday: int  # 0=Monday, 1=Tuesday, ..., 6=Sunday
     full_date: date  # the full date object
-    in_month: bool = True  # whether this day is in the requested month
+    in_month: bool | None = True  # whether this day is in the requested month

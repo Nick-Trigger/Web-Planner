@@ -38,3 +38,18 @@ def list_dates_by_month(year: int, month: int, pad: bool = False):
         )
         for dt in dates
     ]
+    
+@router.get("/today", response_model=CalendarDayRead)
+def get_today():
+    today = date.today()
+    return CalendarDayRead(
+        day=today.day,
+        full_date=today,
+        weekday=today.weekday(),
+        in_month=None,
+    )
+
+@router.get("/time", response_model=str)
+def get_current_time():
+    now = datetime.now()
+    return now.strftime("%H:%M:%S")
