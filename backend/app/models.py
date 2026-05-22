@@ -1,7 +1,8 @@
 from datetime import datetime, date, time
-from sqlalchemy import String, DateTime, Boolean, Date, Time
+from sqlalchemy import String, DateTime, Boolean, Date, Time, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
+
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -14,3 +15,13 @@ class Task(Base):
     due_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     show_from_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+
+class CalendarDay(Base):
+    __tablename__ = "dates"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day: Mapped[int] = mapped_column(Integer, nullable=False)
+    full_date: Mapped[date] = mapped_column(Date, nullable=False)
+    weekday: Mapped[int] = mapped_column(Integer, nullable=False)
+    in_month: Mapped[bool] = mapped_column(Boolean, default=True)

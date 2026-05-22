@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class TaskCreate(BaseModel):
     title: str
-    due_date: date| None = None
+    due_date: date | None = None
     due_time: time | None = None
     priority: int = 0
     show_from_date: date | None = None
@@ -21,3 +21,10 @@ class TaskRead(BaseModel):
     show_from_date: date | None
 
     model_config = {"from_attributes": True}
+
+
+class CalendarDayRead(BaseModel):
+    day: int  # 1, 2, 3, ... 28/29/30/31
+    weekday: int  # 0=Monday, 1=Tuesday, ..., 6=Sunday
+    full_date: date  # the full date object
+    in_month: bool = True  # whether this day is in the requested month
