@@ -1,12 +1,13 @@
-from datetime import datetime
+from datetime import datetime, date, time
 from pydantic import BaseModel
 
 
 class TaskCreate(BaseModel):
     title: str
-    due_datetime: datetime | None = None
+    due_date: date| None = None
+    due_time: time | None = None
     priority: int = 0
-    show_from_date: datetime | None = None
+    show_from_date: date | None = None
 
 
 class TaskRead(BaseModel):

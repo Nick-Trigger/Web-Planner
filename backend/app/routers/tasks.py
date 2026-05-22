@@ -6,12 +6,14 @@ from app.database import get_db
 from app.models import Task
 from app.schemas import TaskCreate, TaskRead
 
+from datetime import date, time, datetime
+
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
 @router.post("", response_model=TaskRead)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
-    task = Task(title=payload.title, due_datetime=payload.due_datetime, priority=payload.priority, show_from_date=payload.show_from_date)
+    task = Task(title=payload.title, due_date=payload.due_date, due_time=payload.due_time, priority=payload.priority, show_from_date=payload.show_from_date)
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -22,6 +24,11 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
 def list_tasks(db: Session = Depends(get_db)):
     return db.scalars(select(Task).order_by(Task.created_at.desc())).all()
 
+@router.get("/listdates", response_model=list[TaskRead])
+def list_tasks_by_date(first_date: date, last_date: date | None = None, db: Session = Depends(get_db)):
+    if last_date is None:
+        last_date = first_date
+    return db.scalars(select(Task).where(Task.due_date >= first_date, Task.due_date <= last_date).order_by(Task.created_at.desc())).all()
 
 @router.get("/{task_id}", response_model=TaskRead)
 def get_task(task_id: int, db: Session = Depends(get_db)):
