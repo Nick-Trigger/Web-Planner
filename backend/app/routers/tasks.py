@@ -11,7 +11,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.post("", response_model=TaskRead)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
-    task = Task(title=payload.title)
+    task = Task(title=payload.title, due_datetime=payload.due_datetime, priority=payload.priority, show_from_date=payload.show_from_date)
     db.add(task)
     db.commit()
     db.refresh(task)
