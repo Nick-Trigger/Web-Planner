@@ -15,7 +15,9 @@ class TaskRead(BaseModel):
     title: str
     done: bool
     priority: int
-    due_datetime: datetime | None
+    due_date: date | None
+    due_time: time | None
     created_at: datetime
-    show_from_date: datetime | None
-    model_config = {"from_attributes": True}  # lets it read from ORM objects
+    show_from_date: date | None
+
+    model_config = {"from_attributes": True}
