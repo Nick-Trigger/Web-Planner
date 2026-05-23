@@ -23,6 +23,17 @@ class TaskRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class NoteUpsert(BaseModel):
+    content: str
+
+
+class NoteRead(BaseModel):
+    note_date: date
+    content: str
+
+    model_config = {"from_attributes": True}
+
+
 class CalendarDayRead(BaseModel):
     day: int  # 1, 2, 3, ... 28/29/30/31
     weekday: int  # 0=Monday, 1=Tuesday, ..., 6=Sunday

@@ -31,3 +31,11 @@ class SingleDate(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     full_date: Mapped[date] = mapped_column(Date, nullable=True)
+
+
+class Note(Base):
+    __tablename__ = "notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    note_date: Mapped[date] = mapped_column(Date, unique=True, nullable=False)
+    content: Mapped[str] = mapped_column(String, nullable=False, default="")

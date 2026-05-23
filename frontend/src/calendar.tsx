@@ -25,10 +25,22 @@ export default function Calendar() {
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
     const [tasks, setTasks] = useState<any[]>([]);
     const [monthTasksByDate, setMonthTasksByDate] = useState<Record<string, any[]>>({});
+    const [noteContent, setNoteContent] = useState("");
+    const [holidays, setHolidays] = useState<Record<string, string>>({});
     const [newTaskDate, setNewTaskDate] = useState(today.toISOString().split("T")[0]);
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newTaskTime, setNewTaskTime] = useState("");
     const [newTaskPriority, setNewTaskPriority] = useState(0);
+
+    useEffect(() => {
+        fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/US`)
+            .then((r) => r.json())
+            .then((data: { date: string; localName: string }[]) => {
+                const map: Record<string, string> = {};
+                for (const h of data) map[h.date] = h.localName;
+                setHolidays(map);
+            });
+    }, [year]);
 
     const fetchMonthTasks = (y: number, m: number) => {
         const firstDate = `${y}-${String(m).padStart(2, "0")}-01`;
@@ -123,7 +135,19 @@ export default function Calendar() {
         setSelectedMonth(d.getMonth() + 1);
         setSelectedYear(d.getFullYear());
         setNewTaskDate(selectedDate);
+        fetch(`http://localhost:8000/notes/${selectedDate}`)
+            .then((r) => r.json())
+            .then((data) => setNoteContent(data.content ?? ""));
     }, [selectedDate]);
+
+    const saveNote = () => {
+        if (!selectedDate) return;
+        fetch(`http://localhost:8000/notes/${selectedDate}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: noteContent }),
+        });
+    };
 
     const fetchTasksForDate = (date: string) => {
         fetch(`http://localhost:8000/tasks/listdates?first_date=${date}`)
@@ -174,10 +198,15 @@ export default function Calendar() {
                         return (
                             <div key={d.full_date} className={["rounded-md min-h-30 bg-white", d.in_month ? "text-gray-900" : "bg-gray-50 text-gray-400", isSelected ? "ring-2 ring-inset ring-secondary" : "", isToday ? "ring-2 ring-inset ring-primary" : "",].join(" ")}>
                                 <button onClick={() => selectDate(d.full_date)} className="w-full h-full p-2 flex flex-col items-start justify-start text-left">
-                                    <div className={["text-sm", isToday ? "font-semibold text-primary" : "", isSelected ? "font-semibold text-secondary" : ""].join(" ")}>{d.day}</div>
+                                    <div className="w-full flex items-start justify-between gap-1">
+                                        <div className={["text-sm shrink-0", isToday ? "font-semibold text-primary" : "", isSelected ? "font-semibold text-secondary" : ""].join(" ")}>{d.day}</div>
+                                        {holidays[d.full_date] && (
+                                            <div className="text-xs text-purple-500 truncate text-right leading-tight">{holidays[d.full_date]}</div>
+                                        )}
+                                    </div>
                                     
                                     <div className="w-full mt-1 flex flex-col gap-0.5 overflow-hidden">
-                                        {(monthTasksByDate[d.full_date] ?? []).slice(0, 3).map((t) => {
+                                        {[...(monthTasksByDate[d.full_date] ?? [])].sort((a, b) => b.priority - a.priority).slice(0, 3).map((t) => {
                                             const chipClass = t.priority === 2 ? "bg-red-100 border-red-300 text-red-600" : t.priority === 1 ? "bg-yellow-100 border-yellow-300 text-yellow-600" : "bg-green-100 border-green-300 text-green-600";
                                             return (
                                                 <div key={t.id} className={["text-xs px-1 py-0.5 rounded truncate leading-tight border-2", chipClass].join(" ")}>
@@ -240,8 +269,8 @@ export default function Calendar() {
                                                         <div key={task.id} className="rounded-md flex gap-2 mt-2 bg-gray-100 p-2 w-full">
                                                             <div className="rounded-md grid grid-cols-6 gap-y-2 gap-x-4 w-full justify-items-center items-center text-sm text-gray-700">
                                                                 <h2 className={["rounded-md text-md flex items-center justify-center text-center col-span-2 w-full h-full border-2", taskPrioClass].join(" ")}>{task.title}</h2>
-                                                                <h2 className="text-md text-base-content text-center">{task.dueDate}</h2>
-                                                                <h2 className="text-md text-base-content text-center">{task.dueTime}</h2>
+                                                                <h2 className="text-md text-base text-center">{task.due_date ? new Date(task.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : ""}</h2>
+                                                                <h2 className="text-md text-basetext-center">{task.due_time ? new Date("1970-01-01T" + task.due_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</h2>
                                                                 <input type="checkbox" defaultChecked className="toggle border-neutral text-neutral checked:bg-secondary checked:text-secondary-content checked:border-secondary-content" />
                                                                 <button onClick={() => handleDeleteTask(task.id)} className="btn btn-sm btn-error">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash" viewBox="0 0 16 16">
@@ -279,7 +308,7 @@ export default function Calendar() {
                         </div>
                         <div className="col-span-1 mt-2 p-2 bg-base-100 rounded-md">
                             <h3 className="text-md text-base-content align-middle">Notes</h3>
-                            <textarea placeholder=" " className="textarea textarea-primary h-5/6 w-full"></textarea>
+                            <textarea placeholder=" " className="textarea textarea-primary h-5/6 w-full" value={noteContent} onChange={(e) => setNoteContent(e.target.value)} onBlur={saveNote}></textarea>
                         </div>
                     </div>
 
