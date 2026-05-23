@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type CalendarDay = {
     day: number;
@@ -27,6 +27,9 @@ export default function Calendar() {
     const [monthTasksByDate, setMonthTasksByDate] = useState<Record<string, any[]>>({});
     const [noteContent, setNoteContent] = useState("");
     const [holidays, setHolidays] = useState<Record<string, string>>({});
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [pickerYear, setPickerYear] = useState(today.getFullYear());
+    const pickerRef = useRef<HTMLDivElement>(null);
     const [newTaskDate, setNewTaskDate] = useState(today.toISOString().split("T")[0]);
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newTaskTime, setNewTaskTime] = useState("");
@@ -165,6 +168,15 @@ export default function Calendar() {
         });
     };
 
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (pickerRef.current && !pickerRef.current.contains(e.target as Node))
+                setPickerOpen(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
     const fetchTasksForDate = (date: string) => {
         fetch(`http://localhost:8000/tasks/listdates?first_date=${date}`)
             .then((r) => r.json())
@@ -179,11 +191,39 @@ export default function Calendar() {
                     onClick={prevMonth}
                     className="rounded-md px-3 py-1.5 text-sm font-medium text-neutral-content hover:text-primary"
                 >
-                    ← Prev
+                    → Prev
                 </button>
-                <h2 className="text-xl font-semibold text-base-content">
-                    {MONTH_NAMES[month - 1]} {year}
-                </h2>
+                <div className="relative" ref={pickerRef}>
+                    <button
+                        onClick={() => { setPickerOpen((o) => !o); setPickerYear(year); }}
+                        className="text-xl font-semibold text-base-content hover:text-primary px-2 py-1 rounded-md"
+                    >
+                        {MONTH_NAMES[month - 1]} {year} ▾
+                    </button>
+                    {pickerOpen && (
+                        <div className="absolute left-1/2 -translate-x-1/2 mt-1 z-50 bg-base-100 border border-base-300 rounded-xl shadow-lg p-3 w-64">
+                            <div className="flex items-center justify-between mb-2">
+                                <button onClick={() => setPickerYear((y) => y - 1)} className="btn btn-xs btn-ghost">→</button>
+                                <span className="font-semibold text-base-content">{pickerYear}</span>
+                                <button onClick={() => setPickerYear((y) => y + 1)} className="btn btn-xs btn-ghost">→</button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-1">
+                                {MONTH_NAMES.map((name, i) => {
+                                    const isActive = pickerYear === year && i + 1 === month;
+                                    return (
+                                        <button
+                                            key={name}
+                                            onClick={() => { setYear(pickerYear); setMonth(i + 1); setPickerOpen(false); }}
+                                            className={["rounded-lg py-1 text-sm", isActive ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200 text-base-content"].join(" ")}
+                                        >
+                                            {name.slice(0, 3)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <button
                     onClick={nextMonth}
                     className="rounded-md px-3 py-1.5 text-sm font-medium text-neutral-content hover:text-primary"
