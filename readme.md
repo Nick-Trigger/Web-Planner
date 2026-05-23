@@ -1,23 +1,22 @@
-# FastAPI + React Starter Template
+# Web Planner
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-A batteries-included starter template for full-stack web apps. FastAPI backend, React frontend, Postgres database, and a one-command Windows dev workflow.
+A personal planning app — interactive calendar, task management, and daily notes. Built with FastAPI, React, and PostgreSQL.
 
-## What's included
+## Features
+
+- **Calendar** — Month/year navigation with a full calendar grid; click any day to open its detail view
+- **Tasks** — Create tasks with due date/time and priority (normal / medium / high); mark done or delete; tasks appear on their calendar day
+- **Daily notes** — Per-date freeform notes with auto-save
+- **US holidays** — Fetched from nager.at and displayed on the calendar
+
+## Tech stack
 
 - **Backend** — Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic migrations, managed with [uv](https://github.com/astral-sh/uv)
-- **Frontend** — React 19 + TypeScript + [React Compiler](https://react.dev/learn/react-compiler), built with Vite
+- **Frontend** — React 19 + TypeScript + [React Compiler](https://react.dev/learn/react-compiler), built with Vite, styled with Tailwind CSS + daisyUI
 - **Database** — PostgreSQL 16 (Docker)
-- **Wired up out of the box** — CORS configured, Alembic reads the DB URL from `.env`, settings load via `pydantic-settings`, OpenAPI docs auto-generated
 - **One-command dev startup** — `dev.ps1` spins up Postgres and opens backend + frontend in Windows Terminal tabs
-- **Sensible `.gitignore`** covering Python, Node, Postgres, and editor/OS junk
-
-## Using this template
-
-1. Click **"Use this template"** on the GitHub page (or clone the repo and re-init git).
-2. Pick a name for your project — you'll swap this in for `planner` in a few places (see [Renaming the project](#renaming-the-project) below).
-3. Follow [First-time setup](#first-time-setup).
 
 ## Prerequisites
 
@@ -158,23 +157,6 @@ docker compose down -v       # -v also deletes the volume
 cd backend
 uv run alembic upgrade head
 ```
-
-## Renaming the project
-
-The template uses `planner` as a placeholder. To rebrand for your own project, replace it in these spots:
-
-- **`docker-compose.yml`** — `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and the volume name
-- **`.env.example`** and **`backend/.env`** — the user/password/db in `DATABASE_URL`
-- **`backend/pyproject.toml`** — `name = "planner-backend"` (or whatever you renamed it)
-- **`frontend/package.json`** — the `"name"` field
-- **`README.md`** — this file
-
-A quick way to find every occurrence:
-```powershell
-Get-ChildItem -Recurse -File -Exclude *.lock,*.png,*.ico | Select-String -Pattern "planner"
-```
-
-You can leave `planner` as-is for prototyping — nothing breaks. Just be aware the dev DB will be called `planner` until you change it.
 
 ## Architecture notes
 
