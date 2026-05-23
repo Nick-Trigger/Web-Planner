@@ -80,7 +80,7 @@ def mark_done(task_id: int, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if task is None:
         raise HTTPException(404, "Task not found")
-    task.done = True
+    task.done = not task.done
     db.commit()
     db.refresh(task)
     return task

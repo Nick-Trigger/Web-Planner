@@ -112,6 +112,22 @@ export default function Calendar() {
             });
     };
 
+    const handleToggleTask = (taskId: number) => {
+        fetch(`http://localhost:8000/tasks/${taskId}/done`, { method: "PATCH" })
+            .then((r) => r.json())
+            .then((updated) => {
+                setTasks((prev) => prev.map((t) => t.id === taskId ? updated : t));
+                setMonthTasksByDate((prev) => {
+                    const key = updated.due_date;
+                    if (!key) return prev;
+                    return {
+                        ...prev,
+                        [key]: (prev[key] ?? []).map((t) => t.id === taskId ? updated : t),
+                    };
+                });
+            });
+    };
+
     const handleDeleteTask = (taskId: number) => {
         fetch(`http://localhost:8000/tasks/${taskId}`, {
             method: "DELETE",
@@ -206,8 +222,15 @@ export default function Calendar() {
                                     </div>
                                     
                                     <div className="w-full mt-1 flex flex-col gap-0.5 overflow-hidden">
-                                        {[...(monthTasksByDate[d.full_date] ?? [])].sort((a, b) => b.priority - a.priority).slice(0, 3).map((t) => {
-                                            const chipClass = t.priority === 2 ? "bg-red-100 border-red-300 text-red-600" : t.priority === 1 ? "bg-yellow-100 border-yellow-300 text-yellow-600" : "bg-green-100 border-green-300 text-green-600";
+                                        {[...(monthTasksByDate[d.full_date] ?? [])].sort((a, b) => {
+                                            if (a.done !== b.done) return a.done ? 1 : -1;
+                                            return b.priority - a.priority;
+                                        }).slice(0, 3).map((t) => {
+                                            const chipClass = t.done
+                                                ? "bg-gray-100 border-gray-300 text-gray-400 line-through opacity-60"
+                                                : t.priority === 2 ? "bg-red-100 border-red-300 text-red-600"
+                                                : t.priority === 1 ? "bg-yellow-100 border-yellow-300 text-yellow-600"
+                                                : "bg-green-100 border-green-300 text-green-600";
                                             return (
                                                 <div key={t.id} className={["text-xs px-1 py-0.5 rounded truncate leading-tight border-2", chipClass].join(" ")}>
                                                     {t.title}
@@ -247,31 +270,23 @@ export default function Calendar() {
                                                     <h2 className="text-md text-gray-500 text-base-content text-center">Completed</h2>
                                                     <h2 className="text-md text-gray-500 text-base-content text-center">Delete</h2>
                                                 </div>
-                                                {[...tasks].sort((a, b) => b.priority - a.priority).map((task) => {
-                                                    const taskPrio = task.priority;
-                                                    let taskPrioClass = "";
-
-                                                    switch (taskPrio) {
-                                                        case 0:
-                                                            taskPrioClass = "bg-green-100 border-green-300 text-green-600";
-                                                            break;
-                                                        case 1:
-                                                            taskPrioClass = "bg-yellow-100 border-yellow-300 text-yellow-600";
-                                                            break;
-                                                        case 2:
-                                                            taskPrioClass = "bg-red-100 border-red-300 text-red-600";
-                                                            break;
-                                                        default:
-                                                            taskPrioClass = "";
-                                                    }
+                                                {[...tasks].sort((a, b) => {
+                                                    if (a.done !== b.done) return a.done ? 1 : -1;
+                                                    return b.priority - a.priority;
+                                                }).map((task) => {
+                                                    const taskPrioClass = task.done
+                                                        ? "bg-gray-100 border-gray-300 text-gray-400 line-through"
+                                                        : task.priority === 2 ? "bg-red-100 border-red-300 text-red-600"
+                                                        : task.priority === 1 ? "bg-yellow-100 border-yellow-300 text-yellow-600"
+                                                        : "bg-green-100 border-green-300 text-green-600";
 
                                                     return (
-                                                        <div key={task.id} className="rounded-md flex gap-2 mt-2 bg-gray-100 p-2 w-full">
+                                                        <div key={task.id} className={["rounded-md flex gap-2 mt-2 p-2 w-full", task.done ? "bg-gray-50 opacity-60" : "bg-gray-100"].join(" ")}>
                                                             <div className="rounded-md grid grid-cols-6 gap-y-2 gap-x-4 w-full justify-items-center items-center text-sm text-gray-700">
                                                                 <h2 className={["rounded-md text-md flex items-center justify-center text-center col-span-2 w-full h-full border-2", taskPrioClass].join(" ")}>{task.title}</h2>
                                                                 <h2 className="text-md text-base text-center">{task.due_date ? new Date(task.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : ""}</h2>
                                                                 <h2 className="text-md text-basetext-center">{task.due_time ? new Date("1970-01-01T" + task.due_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</h2>
-                                                                <input type="checkbox" defaultChecked className="toggle border-neutral text-neutral checked:bg-secondary checked:text-secondary-content checked:border-secondary-content" />
+                                                                <input type="checkbox" checked={task.done} onChange={() => handleToggleTask(task.id)} className="toggle border-neutral text-neutral checked:bg-secondary checked:text-secondary-content checked:border-secondary-content" />
                                                                 <button onClick={() => handleDeleteTask(task.id)} className="btn btn-sm btn-error">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash" viewBox="0 0 16 16">
                                                                         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
